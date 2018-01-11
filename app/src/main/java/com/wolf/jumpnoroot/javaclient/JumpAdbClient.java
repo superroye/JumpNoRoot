@@ -55,6 +55,8 @@ public class JumpAdbClient {
 						if (ss.isConnectionPending()) {
 							if (ss.finishConnect()) {
 								key.interestOps(SelectionKey.OP_READ);
+								ByteBuffer buf = ByteBuffer.allocate(1024);
+								key.attach(buf);
 							} else {
 								key.cancel();
 							}
@@ -83,7 +85,8 @@ public class JumpAdbClient {
 
 	public static void handleRead(SelectionKey key) throws IOException {
 		SocketChannel sc = (SocketChannel) key.channel();
-		ByteBuffer buf = ByteBuffer.allocate(1024);
+		ByteBuffer buf = (ByteBuffer) key.attachment();
+		buf.clear();
 		sc.read(buf);
 		buf.flip();
 
@@ -118,7 +121,7 @@ public class JumpAdbClient {
 		try {
 			charset = Charset.forName("UTF-8");
 			decoder = charset.newDecoder();
-			// ������Ļ���ֻ�������һ�ν�����ڶ�����ʾΪ��
+			// 用这个的话，只能输出来一次结果，第二次显示为空
 			// charBuffer = decoder.decode(buffer);
 			charBuffer = decoder.decode(buffer.asReadOnlyBuffer());
 			return charBuffer.toString();
